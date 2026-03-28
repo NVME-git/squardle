@@ -616,39 +616,43 @@
             svg.id = 'wordPathOverlay';
             gridInput.appendChild(svg);
 
-            const firstCell = path[0];
-            const lastCell = path[path.length - 1];
+            // Compute centre coordinates for every cell in the path
+            const points = path.map(([row, col]) => {
+                const el = document.getElementById(`cell-${row * 4 + col}`);
+                if (!el) return null;
+                const r = el.getBoundingClientRect();
+                return {
+                    x: r.left - gridRect.left + r.width  / 2,
+                    y: r.top  - gridRect.top  + r.height / 2,
+                    w: r.width
+                };
+            }).filter(Boolean);
 
-            const firstEl = document.getElementById(`cell-${firstCell[0] * 4 + firstCell[1]}`);
-            const lastEl  = document.getElementById(`cell-${lastCell[0]  * 4 + lastCell[1]}`);
-            if (!firstEl || !lastEl) return;
+            if (points.length < 1) return;
 
-            const fRect = firstEl.getBoundingClientRect();
-            const lRect = lastEl.getBoundingClientRect();
+            const dotR = Math.max(points[0].w * 0.18, 8);
 
-            const x1 = fRect.left - gridRect.left + fRect.width  / 2;
-            const y1 = fRect.top  - gridRect.top  + fRect.height / 2;
-            const x2 = lRect.left - gridRect.left + lRect.width  / 2;
-            const y2 = lRect.top  - gridRect.top  + lRect.height / 2;
+            // Blue polyline through all letters in order
+            const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+            polyline.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
+            polyline.setAttribute('stroke', 'rgba(0,100,255,1)');
+            polyline.setAttribute('stroke-width', '4');
+            polyline.setAttribute('stroke-linecap', 'round');
+            polyline.setAttribute('stroke-linejoin', 'round');
+            polyline.setAttribute('fill', 'none');
+            svg.appendChild(polyline);
 
-            const dotR = Math.max(fRect.width * 0.18, 8);
-
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', x1); line.setAttribute('y1', y1);
-            line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-            line.setAttribute('stroke', 'rgba(0,100,255,1)');
-            line.setAttribute('stroke-width', '4');
-            line.setAttribute('stroke-linecap', 'round');
-            svg.appendChild(line);
-
+            // Green dot on the starting letter
             const startDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            startDot.setAttribute('cx', x1); startDot.setAttribute('cy', y1);
+            startDot.setAttribute('cx', points[0].x); startDot.setAttribute('cy', points[0].y);
             startDot.setAttribute('r', dotR);
             startDot.setAttribute('fill', 'rgba(0,180,0,1)');
             svg.appendChild(startDot);
 
+            // Red dot on the ending letter
+            const last = points[points.length - 1];
             const endDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            endDot.setAttribute('cx', x2); endDot.setAttribute('cy', y2);
+            endDot.setAttribute('cx', last.x); endDot.setAttribute('cy', last.y);
             endDot.setAttribute('r', dotR);
             endDot.setAttribute('fill', 'rgba(210,0,0,1)');
             svg.appendChild(endDot);
