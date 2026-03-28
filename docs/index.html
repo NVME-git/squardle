@@ -58,10 +58,9 @@
 
         .grid-input {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin: 20px auto;
-            max-width: 300px;
+            width: 100%;
             position: relative;
         }
 
@@ -103,6 +102,86 @@
         .grid-input input::placeholder {
             color: #ccc;
             font-size: 0.6em;
+        }
+
+        .grid-size-selector {
+            margin: 15px 0 5px;
+        }
+
+        .grid-size-label {
+            font-weight: 600;
+            color: #8B4513;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .size-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .size-preset-btn {
+            background: #f8f9fa;
+            color: #555;
+            border: 2px solid #ddd;
+            padding: 8px 14px;
+            font-size: 0.95em;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, color 0.2s;
+            margin-top: 0;
+            box-shadow: none;
+        }
+
+        .size-preset-btn:hover {
+            border-color: #FF6347;
+            background: #fff5f5;
+            color: #FF4500;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .size-preset-btn.active {
+            background: linear-gradient(135deg, #FF6347 0%, #FF4500 100%);
+            color: white;
+            border-color: #FF4500;
+        }
+
+        .custom-size-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .custom-size-wrapper input[type="number"] {
+            width: 70px;
+            padding: 8px;
+            font-size: 0.95em;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .custom-size-wrapper input[type="number"]:focus {
+            outline: none;
+            border-color: #FF6347;
+            box-shadow: 0 0 0 3px rgba(255, 99, 71, 0.2);
+        }
+
+        .custom-size-wrapper button {
+            padding: 8px 14px;
+            font-size: 0.95em;
+            margin-top: 0;
+        }
+
+        .size-error {
+            color: #c33;
+            font-size: 0.9em;
+            margin-top: 6px;
         }
 
         .instructions {
@@ -462,6 +541,22 @@
                 that can be formed by connecting adjacent letters (including diagonals).
             </div>
 
+            <div class="grid-size-selector">
+                <span class="grid-size-label">Grid Size:</span>
+                <div class="size-presets">
+                    <button type="button" class="size-preset-btn" data-size="3" onclick="setGridSize(3)">3×3</button>
+                    <button type="button" class="size-preset-btn active" data-size="4" onclick="setGridSize(4)">4×4</button>
+                    <button type="button" class="size-preset-btn" data-size="5" onclick="setGridSize(5)">5×5</button>
+                    <button type="button" class="size-preset-btn" data-size="6" onclick="setGridSize(6)">6×6</button>
+                    <div class="custom-size-wrapper">
+                        <input type="number" id="customSizeInput" min="3" max="10" placeholder="3–10"
+                               onkeydown="if(event.key==='Enter') applyCustomSize()">
+                        <button type="button" onclick="applyCustomSize()">Custom</button>
+                    </div>
+                </div>
+                <div id="sizeError" class="size-error" style="display:none;"></div>
+            </div>
+
             <div class="grid-input" id="gridInput">
                 <!-- 4x4 grid inputs will be generated here -->
             </div>
@@ -553,6 +648,7 @@
         // Global variables
         let trie = null;
         const MIN_WORD_LENGTH = 4;
+        let currentGridSize = 4;
         let checkedWords = new Set();
         let currentFoundWords = new Map();
         let highlightTimeouts = [];
@@ -648,7 +744,7 @@
 
             // Compute centre coordinates for every cell in the path
             const points = path.map(([row, col]) => {
-                const el = document.getElementById(`cell-${row * 4 + col}`);
+                const el = document.getElementById(`cell-${row * currentGridSize + col}`);
                 if (!el) return null;
                 const r = el.getBoundingClientRect();
                 return {
@@ -705,7 +801,8 @@
             const path = currentFoundWords.get(word);
             if (!path || path.length === 0) return;
 
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const gridInput = document.getElementById('gridInput');
+            gridInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
             clearHighlights();
 
             const LETTER_DELAY = 300;
@@ -713,7 +810,7 @@
 
             path.forEach(([row, col], index) => {
                 const t = setTimeout(() => {
-                    const cell = document.getElementById(`cell-${row * 4 + col}`);
+                    const cell = document.getElementById(`cell-${row * currentGridSize + col}`);
                     if (cell) cell.classList.add('word-highlight');
                 }, index * LETTER_DELAY);
                 highlightTimeouts.push(t);
@@ -727,10 +824,22 @@
             fadeTimeout = setTimeout(fadeOutHighlights, FADE_AFTER);
         }
 
-        // Initialize grid input
-        function initGrid() {
+        // Build (or rebuild) the grid for the given size
+        function setGridSize(size, clearState = true) {
+            currentGridSize = size;
+
+            // Update preset button active states
+            document.querySelectorAll('.size-preset-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.size) === size);
+            });
+
+            // Rebuild grid cells
             const gridInput = document.getElementById('gridInput');
-            for (let i = 0; i < 16; i++) {
+            gridInput.innerHTML = '';
+            gridInput.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            gridInput.style.maxWidth = `${Math.min(size * 70, 700)}px`;
+
+            for (let i = 0; i < size * size; i++) {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.maxLength = 1;
@@ -739,6 +848,38 @@
                 input.addEventListener('keydown', handleKeyDown);
                 gridInput.appendChild(input);
             }
+
+            if (clearState) {
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('results').classList.remove('show');
+                checkedWords.clear();
+                saveCheckedWords();
+            }
+        }
+
+        // Apply a custom grid size entered by the user
+        function applyCustomSize() {
+            const input = document.getElementById('customSizeInput');
+            const sizeErrorDiv = document.getElementById('sizeError');
+            const raw = input.value.trim();
+
+            if (!raw) {
+                sizeErrorDiv.textContent = 'Please enter a size.';
+                sizeErrorDiv.style.display = 'block';
+                return;
+            }
+
+            const size = Number(raw);
+
+            if (!Number.isInteger(size) || size < 3 || size > 10) {
+                sizeErrorDiv.textContent = 'Please enter a whole number between 3 and 10.';
+                sizeErrorDiv.style.display = 'block';
+                return;
+            }
+
+            sizeErrorDiv.style.display = 'none';
+            input.value = '';
+            setGridSize(size);
         }
 
         function handleInput(e) {
@@ -771,7 +912,8 @@
         }
 
         function clearGrid() {
-            for (let i = 0; i < 16; i++) {
+            clearHighlights();
+            for (let i = 0; i < currentGridSize * currentGridSize; i++) {
                 document.getElementById(`cell-${i}`).value = '';
             }
             document.getElementById('error').style.display = 'none';
@@ -783,23 +925,30 @@
         }
 
         function setGrid(gridString) {
-            // Remove spaces and convert to lowercase
+            // Remove whitespace and convert to lowercase
             gridString = gridString.replace(/\s/g, '').toLowerCase();
-            
-            if (gridString.length !== 16) {
-                console.warn('Grid string must be 16 characters');
+
+            // Infer grid size from string length (must be a perfect square 3–10)
+            const size = Math.round(Math.sqrt(gridString.length));
+            if (size < 3 || size > 10 || size * size !== gridString.length) {
+                console.warn('Grid string length must be a perfect square between 3×3 and 10×10');
                 return false;
             }
-            
-            // Validate only contains letters or spaces
-            if (!/^[a-z ]*$/.test(gridString)) {
+
+            // Validate only contains letters
+            if (!/^[a-z]*$/.test(gridString)) {
                 console.warn('Grid string contains invalid characters');
                 return false;
             }
-            
-            for (let i = 0; i < 16; i++) {
-                const char = gridString[i];
-                document.getElementById(`cell-${i}`).value = (char === ' ' || char === '') ? '' : char;
+
+            // Resize the grid if necessary (without clearing state)
+            if (size !== currentGridSize) {
+                setGridSize(size, false);
+            }
+
+            for (let i = 0; i < size * size; i++) {
+                const cell = document.getElementById(`cell-${i}`);
+                if (cell) cell.value = gridString[i] || '';
             }
             return true;
         }
@@ -816,9 +965,9 @@
                 return;
             }
             
-            // Create shareable URL
+            // Create shareable URL (include size so the recipient gets the same grid)
             const baseUrl = window.location.href.split('?')[0];
-            const shareUrl = `${baseUrl}?grid=${encodeURIComponent(gridString)}`;
+            const shareUrl = `${baseUrl}?grid=${encodeURIComponent(gridString)}&size=${currentGridSize}`;
             
             // Copy to clipboard
             navigator.clipboard.writeText(shareUrl).then(() => {
@@ -837,8 +986,18 @@
         function loadGridFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             const gridParam = urlParams.get('grid');
+            const sizeParam = urlParams.get('size');
             
             if (gridParam) {
+                // Honour an explicit size param; fall back to inferring from grid length
+                if (sizeParam) {
+                    const parsedSize = parseInt(sizeParam, 10);
+                    if (Number.isInteger(parsedSize) && parsedSize >= 3 && parsedSize <= 10
+                            && parsedSize !== currentGridSize) {
+                        setGridSize(parsedSize, false);
+                    }
+                }
+
                 if (setGrid(gridParam)) {
                     // Auto-solve if grid is loaded from URL
                     setTimeout(() => {
@@ -850,10 +1009,10 @@
 
         function getGrid() {
             const grid = [];
-            for (let row = 0; row < 4; row++) {
+            for (let row = 0; row < currentGridSize; row++) {
                 grid[row] = [];
-                for (let col = 0; col < 4; col++) {
-                    const cell = document.getElementById(`cell-${row * 4 + col}`);
+                for (let col = 0; col < currentGridSize; col++) {
+                    const cell = document.getElementById(`cell-${row * currentGridSize + col}`);
                     const value = cell.value.toLowerCase().trim();
                     // Use space for empty cells, only allow letters
                     grid[row][col] = (value && /^[a-z]$/.test(value)) ? value : ' ';
@@ -864,8 +1023,8 @@
 
         // Word finding algorithm
         function findWords(grid, trie) {
-            const rows = 4;
-            const cols = 4;
+            const rows = grid.length;
+            const cols = grid[0].length;
             const directions = [
                 [-1, -1], [-1, 0], [-1, 1],
                 [0, -1],           [0, 1],
@@ -1076,7 +1235,7 @@
         }
 
         // Initialize on page load
-        initGrid();
+        setGridSize(4, false);
         loadCheckedWords();
         loadGridFromUrl();
     </script>
