@@ -933,8 +933,8 @@
         }
 
         function setGrid(gridString) {
-            // Strip newlines/tabs but preserve spaces (blank cell markers), convert to lowercase
-            gridString = gridString.replace(/[\n\r\t]/g, '').toLowerCase();
+            // Strip newlines/tabs, convert '#' (blank cell marker in shared URLs) to spaces, lowercase
+            gridString = gridString.replace(/[\n\r\t]/g, '').replace(/#/g, ' ').toLowerCase();
 
             // Infer grid size from string length (must be a perfect square 3–10)
             const size = Math.round(Math.sqrt(gridString.length));
@@ -973,9 +973,13 @@
                 return;
             }
             
+            // Replace blank cells (spaces) with '#' for a cleaner shareable URL
+            const gridParam = gridString.replace(/ /g, '#');
+            // '#' is URL-safe enough here — letters (a-z) and '#' need no percent-encoding
+
             // Create shareable URL (include size so the recipient gets the same grid)
-            const baseUrl = window.location.href.split('?')[0];
-            const shareUrl = `${baseUrl}?grid=${encodeURIComponent(gridString)}&size=${currentGridSize}`;
+            const baseUrl = window.location.href.split(/[?#]/)[0];
+            const shareUrl = `${baseUrl}?grid=${gridParam}&size=${currentGridSize}`;
             
             // Copy to clipboard
             navigator.clipboard.writeText(shareUrl).then(() => {
@@ -992,10 +996,29 @@
         }
 
         function loadGridFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const gridParam = urlParams.get('grid');
-            const sizeParam = urlParams.get('size');
-            
+            // Parse the raw href so that '#' used as a blank-cell marker in the grid param
+            // is preserved (browsers split on '#' into search/hash, so URLSearchParams alone
+            // would miss the chars after the first '#').
+            const href = window.location.href;
+            const qStart = href.indexOf('?');
+            if (qStart === -1) return;
+
+            // Everything after '?', joining query string and fragment content.
+            // This is intentional: '#' is used as a blank-cell marker in the grid param,
+            // so the fragment is part of the grid value, not a page anchor.
+            const rawQuery = href.slice(qStart + 1);
+            const params = {};
+            rawQuery.split('&').forEach(part => {
+                const eqIdx = part.indexOf('=');
+                if (eqIdx !== -1) {
+                    params[decodeURIComponent(part.slice(0, eqIdx))] =
+                        decodeURIComponent(part.slice(eqIdx + 1));
+                }
+            });
+
+            const gridParam = params['grid'];
+            const sizeParam = params['size'];
+
             if (gridParam) {
                 // Honour an explicit size param; fall back to inferring from grid length
                 if (sizeParam) {
