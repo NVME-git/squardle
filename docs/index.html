@@ -157,7 +157,7 @@
         }
 
         .custom-size-wrapper input[type="number"] {
-            width: 70px;
+            width: 55px;
             padding: 8px;
             font-size: 0.95em;
             border: 2px solid #ddd;
@@ -544,12 +544,15 @@
             <div class="grid-size-selector">
                 <span class="grid-size-label">Grid Size:</span>
                 <div class="size-presets">
-                    <button type="button" class="size-preset-btn" data-size="3" onclick="setGridSize(3)">3×3</button>
-                    <button type="button" class="size-preset-btn active" data-size="4" onclick="setGridSize(4)">4×4</button>
-                    <button type="button" class="size-preset-btn" data-size="5" onclick="setGridSize(5)">5×5</button>
-                    <button type="button" class="size-preset-btn" data-size="6" onclick="setGridSize(6)">6×6</button>
+                    <button type="button" class="size-preset-btn" data-rows="3" data-cols="3" onclick="setGridSize(3,3)">3×3</button>
+                    <button type="button" class="size-preset-btn active" data-rows="4" data-cols="4" onclick="setGridSize(4,4)">4×4</button>
+                    <button type="button" class="size-preset-btn" data-rows="5" data-cols="5" onclick="setGridSize(5,5)">5×5</button>
+                    <button type="button" class="size-preset-btn" data-rows="6" data-cols="6" onclick="setGridSize(6,6)">6×6</button>
                     <div class="custom-size-wrapper">
-                        <input type="number" id="customSizeInput" min="3" max="10" placeholder="3–10"
+                        <input type="number" id="customColsInput" min="3" max="10" placeholder="W"
+                               onkeydown="if(event.key==='Enter') applyCustomSize()">
+                        <span>×</span>
+                        <input type="number" id="customRowsInput" min="3" max="10" placeholder="H"
                                onkeydown="if(event.key==='Enter') applyCustomSize()">
                         <button type="button" onclick="applyCustomSize()">Custom</button>
                     </div>
@@ -648,7 +651,8 @@
         // Global variables
         let trie = null;
         const MIN_WORD_LENGTH = 4;
-        let currentGridSize = 4;
+        let currentGridRows = 4;
+        let currentGridCols = 4;
         let checkedWords = new Set();
         let currentFoundWords = new Map();
         let highlightTimeouts = [];
@@ -744,7 +748,7 @@
 
             // Compute centre coordinates for every cell in the path
             const points = path.map(([row, col]) => {
-                const el = document.getElementById(`cell-${row * currentGridSize + col}`);
+                const el = document.getElementById(`cell-${row * currentGridCols + col}`);
                 if (!el) return null;
                 const r = el.getBoundingClientRect();
                 return {
@@ -810,7 +814,7 @@
 
             path.forEach(([row, col], index) => {
                 const t = setTimeout(() => {
-                    const cell = document.getElementById(`cell-${row * currentGridSize + col}`);
+                    const cell = document.getElementById(`cell-${row * currentGridCols + col}`);
                     if (cell) cell.classList.add('word-highlight');
                 }, index * LETTER_DELAY);
                 highlightTimeouts.push(t);
@@ -824,22 +828,24 @@
             fadeTimeout = setTimeout(fadeOutHighlights, FADE_AFTER);
         }
 
-        // Build (or rebuild) the grid for the given size
-        function setGridSize(size, clearState = true) {
-            currentGridSize = size;
+        // Build (or rebuild) the grid for the given dimensions
+        function setGridSize(rows, cols, clearState = true) {
+            currentGridRows = rows;
+            currentGridCols = cols;
 
             // Update preset button active states
             document.querySelectorAll('.size-preset-btn').forEach(btn => {
-                btn.classList.toggle('active', parseInt(btn.dataset.size) === size);
+                btn.classList.toggle('active',
+                    parseInt(btn.dataset.rows) === rows && parseInt(btn.dataset.cols) === cols);
             });
 
             // Rebuild grid cells
             const gridInput = document.getElementById('gridInput');
             gridInput.innerHTML = '';
-            gridInput.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
-            gridInput.style.maxWidth = `${Math.min(size * 70, 700)}px`;
+            gridInput.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            gridInput.style.maxWidth = `${Math.min(cols * 70, 700)}px`;
 
-            for (let i = 0; i < size * size; i++) {
+            for (let i = 0; i < rows * cols; i++) {
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.maxLength = 1;
@@ -859,27 +865,32 @@
 
         // Apply a custom grid size entered by the user
         function applyCustomSize() {
-            const input = document.getElementById('customSizeInput');
+            const colsInput = document.getElementById('customColsInput');
+            const rowsInput = document.getElementById('customRowsInput');
             const sizeErrorDiv = document.getElementById('sizeError');
-            const raw = input.value.trim();
+            const rawCols = colsInput.value.trim();
+            const rawRows = rowsInput.value.trim();
 
-            if (!raw) {
-                sizeErrorDiv.textContent = 'Please enter a size.';
+            if (!rawCols || !rawRows) {
+                sizeErrorDiv.textContent = 'Please enter both width and height.';
                 sizeErrorDiv.style.display = 'block';
                 return;
             }
 
-            const size = Number(raw);
+            const cols = Number(rawCols);
+            const rows = Number(rawRows);
 
-            if (!Number.isInteger(size) || size < 3 || size > 10) {
-                sizeErrorDiv.textContent = 'Please enter a whole number between 3 and 10.';
+            if (!Number.isInteger(cols) || cols < 3 || cols > 10 ||
+                    !Number.isInteger(rows) || rows < 3 || rows > 10) {
+                sizeErrorDiv.textContent = 'Please enter whole numbers between 3 and 10 for both dimensions.';
                 sizeErrorDiv.style.display = 'block';
                 return;
             }
 
             sizeErrorDiv.style.display = 'none';
-            input.value = '';
-            setGridSize(size);
+            colsInput.value = '';
+            rowsInput.value = '';
+            setGridSize(rows, cols);
         }
 
         function handleInput(e) {
@@ -921,7 +932,7 @@
 
         function clearGrid() {
             clearHighlights();
-            for (let i = 0; i < currentGridSize * currentGridSize; i++) {
+            for (let i = 0; i < currentGridRows * currentGridCols; i++) {
                 document.getElementById(`cell-${i}`).value = '';
             }
             document.getElementById('error').style.display = 'none';
@@ -932,15 +943,26 @@
             saveCheckedWords();
         }
 
-        function setGrid(gridString) {
+        function setGrid(gridString, rows = null, cols = null) {
             // Strip newlines/tabs, convert '#' (blank cell marker in shared URLs) to spaces, lowercase
             gridString = gridString.replace(/[\n\r\t]/g, '').replace(/#/g, ' ').toLowerCase();
 
-            // Infer grid size from string length (must be a perfect square 3–10)
-            const size = Math.round(Math.sqrt(gridString.length));
-            if (size < 3 || size > 10 || size * size !== gridString.length) {
-                console.warn('Grid string length must be a perfect square between 3×3 and 10×10');
-                return false;
+            // Determine grid dimensions
+            if (rows !== null && cols !== null) {
+                // Use provided dimensions
+                if (rows < 3 || rows > 10 || cols < 3 || cols > 10 || rows * cols !== gridString.length) {
+                    console.warn('Grid string length does not match provided dimensions');
+                    return false;
+                }
+            } else {
+                // Infer grid size from string length (fall back to perfect square)
+                const size = Math.round(Math.sqrt(gridString.length));
+                if (size < 3 || size > 10 || size * size !== gridString.length) {
+                    console.warn('Grid string length must be a perfect square between 3×3 and 10×10');
+                    return false;
+                }
+                rows = size;
+                cols = size;
             }
 
             // Validate only contains letters or spaces (blank cells)
@@ -950,11 +972,11 @@
             }
 
             // Resize the grid if necessary (without clearing state)
-            if (size !== currentGridSize) {
-                setGridSize(size, false);
+            if (rows !== currentGridRows || cols !== currentGridCols) {
+                setGridSize(rows, cols, false);
             }
 
-            for (let i = 0; i < size * size; i++) {
+            for (let i = 0; i < rows * cols; i++) {
                 const cell = document.getElementById(`cell-${i}`);
                 if (cell) cell.value = gridString[i] !== ' ' ? gridString[i] : '';
             }
@@ -979,7 +1001,7 @@
 
             // Create shareable URL (include size so the recipient gets the same grid)
             const baseUrl = window.location.href.split(/[?#]/)[0];
-            const shareUrl = `${baseUrl}?grid=${gridParam}&size=${currentGridSize}`;
+            const shareUrl = `${baseUrl}?grid=${gridParam}&rows=${currentGridRows}&cols=${currentGridCols}`;
             
             // Copy to clipboard
             navigator.clipboard.writeText(shareUrl).then(() => {
@@ -1017,19 +1039,37 @@
             });
 
             const gridParam = params['grid'];
-            const sizeParam = params['size'];
-
+            const rowsParam = params['rows'];
+            const colsParam = params['cols'];
+            const sizeParam = params['size']; // backward compat with legacy square URLs
             if (gridParam) {
-                // Honour an explicit size param; fall back to inferring from grid length
-                if (sizeParam) {
+                let rows = null, cols = null;
+
+                // Honour explicit rows/cols params
+                if (rowsParam && colsParam) {
+                    const parsedRows = parseInt(rowsParam, 10);
+                    const parsedCols = parseInt(colsParam, 10);
+                    if (Number.isInteger(parsedRows) && parsedRows >= 3 && parsedRows <= 10 &&
+                            Number.isInteger(parsedCols) && parsedCols >= 3 && parsedCols <= 10) {
+                        rows = parsedRows;
+                        cols = parsedCols;
+                        if (rows !== currentGridRows || cols !== currentGridCols) {
+                            setGridSize(rows, cols, false);
+                        }
+                    }
+                } else if (sizeParam) {
+                    // Backward compat: size param = square grid
                     const parsedSize = parseInt(sizeParam, 10);
-                    if (Number.isInteger(parsedSize) && parsedSize >= 3 && parsedSize <= 10
-                            && parsedSize !== currentGridSize) {
-                        setGridSize(parsedSize, false);
+                    if (Number.isInteger(parsedSize) && parsedSize >= 3 && parsedSize <= 10) {
+                        rows = parsedSize;
+                        cols = parsedSize;
+                        if (rows !== currentGridRows || cols !== currentGridCols) {
+                            setGridSize(rows, cols, false);
+                        }
                     }
                 }
 
-                if (setGrid(gridParam)) {
+                if (setGrid(gridParam, rows, cols)) {
                     // Auto-solve if grid is loaded from URL
                     setTimeout(() => {
                         solveSquardle();
@@ -1040,10 +1080,10 @@
 
         function getGrid() {
             const grid = [];
-            for (let row = 0; row < currentGridSize; row++) {
+            for (let row = 0; row < currentGridRows; row++) {
                 grid[row] = [];
-                for (let col = 0; col < currentGridSize; col++) {
-                    const cell = document.getElementById(`cell-${row * currentGridSize + col}`);
+                for (let col = 0; col < currentGridCols; col++) {
+                    const cell = document.getElementById(`cell-${row * currentGridCols + col}`);
                     const value = cell.value.toLowerCase().trim();
                     // Use space for empty cells, only allow letters
                     grid[row][col] = (value && /^[a-z]$/.test(value)) ? value : ' ';
@@ -1265,7 +1305,7 @@
         }
 
         // Initialize on page load
-        setGridSize(4, false);
+        setGridSize(4, 4, false);
         loadCheckedWords();
         loadGridFromUrl();
     </script>
