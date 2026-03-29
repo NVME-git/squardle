@@ -919,6 +919,14 @@
                 if (prevInput && prevInput.tagName === 'INPUT') {
                     prevInput.focus();
                 }
+            } else if (e.key === ' ') {
+                // Space = blank cell: keep the cell empty and auto-advance
+                e.preventDefault();
+                e.target.value = '';
+                const nextInput = e.target.nextElementSibling;
+                if (nextInput && nextInput.tagName === 'INPUT') {
+                    nextInput.focus();
+                }
             }
         }
 
@@ -936,8 +944,8 @@
         }
 
         function setGrid(gridString, rows = null, cols = null) {
-            // Remove whitespace and convert to lowercase
-            gridString = gridString.replace(/\s/g, '').toLowerCase();
+            // Strip newlines/tabs, convert '#' (blank cell marker in shared URLs) to spaces, lowercase
+            gridString = gridString.replace(/[\n\r\t]/g, '').replace(/#/g, ' ').toLowerCase();
 
             // Determine grid dimensions
             if (rows !== null && cols !== null) {
@@ -957,8 +965,8 @@
                 cols = size;
             }
 
-            // Validate only contains letters
-            if (!/^[a-z]*$/.test(gridString)) {
+            // Validate only contains letters or spaces (blank cells)
+            if (!/^[a-z ]*$/.test(gridString)) {
                 console.warn('Grid string contains invalid characters');
                 return false;
             }
@@ -970,7 +978,7 @@
 
             for (let i = 0; i < rows * cols; i++) {
                 const cell = document.getElementById(`cell-${i}`);
-                if (cell) cell.value = gridString[i] || '';
+                if (cell) cell.value = gridString[i] !== ' ' ? gridString[i] : '';
             }
             return true;
         }
@@ -987,9 +995,13 @@
                 return;
             }
             
+            // Replace blank cells (spaces) with '#' for a cleaner shareable URL
+            const gridParam = gridString.replace(/ /g, '#');
+            // '#' is URL-safe enough here — letters (a-z) and '#' need no percent-encoding
+
             // Create shareable URL (include size so the recipient gets the same grid)
-            const baseUrl = window.location.href.split('?')[0];
-            const shareUrl = `${baseUrl}?grid=${encodeURIComponent(gridString)}&rows=${currentGridRows}&cols=${currentGridCols}`;
+            const baseUrl = window.location.href.split(/[?#]/)[0];
+            const shareUrl = `${baseUrl}?grid=${gridParam}&rows=${currentGridRows}&cols=${currentGridCols}`;
             
             // Copy to clipboard
             navigator.clipboard.writeText(shareUrl).then(() => {
@@ -1006,12 +1018,30 @@
         }
 
         function loadGridFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const gridParam = urlParams.get('grid');
-            const rowsParam = urlParams.get('rows');
-            const colsParam = urlParams.get('cols');
-            const sizeParam = urlParams.get('size'); // backward compat with legacy square URLs
-            
+            // Parse the raw href so that '#' used as a blank-cell marker in the grid param
+            // is preserved (browsers split on '#' into search/hash, so URLSearchParams alone
+            // would miss the chars after the first '#').
+            const href = window.location.href;
+            const qStart = href.indexOf('?');
+            if (qStart === -1) return;
+
+            // Everything after '?', joining query string and fragment content.
+            // This is intentional: '#' is used as a blank-cell marker in the grid param,
+            // so the fragment is part of the grid value, not a page anchor.
+            const rawQuery = href.slice(qStart + 1);
+            const params = {};
+            rawQuery.split('&').forEach(part => {
+                const eqIdx = part.indexOf('=');
+                if (eqIdx !== -1) {
+                    params[decodeURIComponent(part.slice(0, eqIdx))] =
+                        decodeURIComponent(part.slice(eqIdx + 1));
+                }
+            });
+
+            const gridParam = params['grid'];
+            const rowsParam = params['rows'];
+            const colsParam = params['cols'];
+            const sizeParam = params['size']; // backward compat with legacy square URLs
             if (gridParam) {
                 let rows = null, cols = null;
 
@@ -1077,7 +1107,6 @@
 
             function dfs(r, c, prefix, path) {
                 if (visited[r][c]) return;
-                if (grid[r][c] === ' ') return;
 
                 prefix += grid[r][c];
                 if (!trie.hasPrefix(prefix)) return;

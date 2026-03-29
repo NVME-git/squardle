@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+test_input.txt
+found_words/
+found_words.txt
