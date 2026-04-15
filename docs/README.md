@@ -2,8 +2,6 @@
 
 A Single Page Application (SPA) that solves Squaredle puzzles by finding all valid English words in a 4x4 letter grid.
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://buymeacoffee.com/nabeelvandayar)
-
 ## 🌐 Live Demo
 
 Once deployed, your app will be available at: `https://[your-username].github.io/squardle`
@@ -121,3 +119,7 @@ The solver uses:
 ## 📄 License
 
 MIT License - Free to use and modify
+
+---
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-☕%20support-yellow?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/nabeelvandayar)
