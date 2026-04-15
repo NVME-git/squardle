@@ -882,7 +882,6 @@
 
         function attachWordLongPressHandler(wordTextEl, word, wordItem) {
             let longPressTimer = null;
-            let longPressTriggered = false;
 
             const clearLongPressTimer = () => {
                 if (longPressTimer) {
@@ -896,10 +895,8 @@
                 if (event.type === 'touchstart' && event.touches && event.touches.length !== 1) return;
 
                 clearLongPressTimer();
-                longPressTriggered = false;
 
                 longPressTimer = setTimeout(() => {
-                    longPressTriggered = true;
                     wordItem.dataset.skipToggleOnce = '1';
                     openDictionaryDefinition(word);
                 }, LONG_PRESS_DURATION_MS);
@@ -916,9 +913,7 @@
             wordTextEl.addEventListener('touchend', endLongPress);
             wordTextEl.addEventListener('touchcancel', endLongPress);
             wordTextEl.addEventListener('contextmenu', (e) => {
-                if (longPressTriggered) {
-                    e.preventDefault();
-                }
+                e.preventDefault();
             });
         }
 
