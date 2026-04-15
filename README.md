@@ -1,18 +1,18 @@
 # Squardle Solver
 
+> 🔍 Like Sherlock, Squarelock searches for Squardle solutions.
+
 A complete Squaredle puzzle solver available in two versions:
 1. **Web App** (SPA for GitHub Pages) - Use in your browser
 2. **CLI Tool** (Python) - Run from command line with image generation
-
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://buymeacoffee.com/nabeelvandayar)
 
 ---
 
 ## 📸 Screenshots
 
-| Empty Grid | Grid Filled In |
-|:---:|:---:|
-| ![Empty grid input](https://github.com/user-attachments/assets/f8b48eee-c2f6-4b34-98ae-50e44bfda9a6) | ![Grid with letters entered](https://github.com/user-attachments/assets/687c9756-28db-42a5-b054-ab73f71a8017) |
+| Empty Grid | Grid Filled In | Results |
+|:---:|:---:|:---:|
+| ![Empty grid input](docs/screenshots/app-empty.png) | ![Grid with letters entered](docs/screenshots/app-filled.png) | ![Results view](docs/screenshots/app-results.png) |
 
 ---
 
@@ -150,3 +150,7 @@ squardle/
 ## 📄 License
 
 MIT License - Free to use and modify
+
+---
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-☕%20support-yellow?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/nabeelvandayar)
