@@ -8,6 +8,14 @@ A complete Squaredle puzzle solver available in two versions:
 
 ---
 
+## 📸 Screenshots
+
+| Empty Grid | Grid Filled In |
+|:---:|:---:|
+| ![Empty grid input](https://github.com/user-attachments/assets/f8b48eee-c2f6-4b34-98ae-50e44bfda9a6) | ![Grid with letters entered](https://github.com/user-attachments/assets/687c9756-28db-42a5-b054-ab73f71a8017) |
+
+---
+
 ## 🌐 Web App (Recommended for Most Users)
 
 An interactive Single Page Application that runs entirely in your browser.
