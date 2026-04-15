@@ -712,7 +712,7 @@
                 <button class="reset-btn" onclick="resetProgress()">🔄 Reset Progress</button>
             </div>
             <div class="word-hint">
-                💡 <strong>Tip:</strong> Click on any word to check it off as found! Press the 👁 button to highlight it on the grid.
+                💡 <strong>Tip:</strong> Click any word to check it off, press 👁 to highlight it on the grid, or press and hold the word text to open a dictionary definition.
             </div>
             <div class="stats" id="stats"></div>
             <div id="wordGroups"></div>
@@ -839,6 +839,9 @@
         let currentFoundWords = new Map();
         let highlightTimeouts = [];
         let fadeTimeout = null;
+        const LONG_PRESS_DURATION_MS = 550;
+        const CONTEXT_MENU_SUPPRESS_DURATION_MS = 1000;
+        const DICTIONARY_URL_BASE = 'https://en.wiktionary.org/wiki/';
 
         // Load checked words from localStorage
         function loadCheckedWords() {
@@ -859,6 +862,10 @@
 
         // Toggle word as found/not found
         function toggleWord(word, wordItem) {
+            if (wordItem.dataset.skipToggleOnce === '1') {
+                wordItem.dataset.skipToggleOnce = '0';
+                return;
+            }
             if (checkedWords.has(word)) {
                 checkedWords.delete(word);
                 wordItem.classList.remove('found');
@@ -868,6 +875,54 @@
             }
             saveCheckedWords();
             updateStats();
+        }
+
+        function openDictionaryDefinition(word) {
+            window.open(`${DICTIONARY_URL_BASE}${encodeURIComponent(word)}`, '_blank', 'noopener,noreferrer');
+        }
+
+        function attachWordLongPressHandler(wordTextEl, word, wordItem) {
+            let longPressTimer = null;
+            let isPressing = false;
+            let lastLongPressAt = 0;
+
+            const clearLongPressTimer = () => {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+            };
+
+            const startLongPress = (event) => {
+                if (event.type === 'mousedown' && event.button !== 0) return;
+                if (event.type === 'touchstart' && event.touches && event.touches.length !== 1) return;
+
+                clearLongPressTimer();
+                isPressing = true;
+
+                longPressTimer = setTimeout(() => {
+                    lastLongPressAt = Date.now();
+                    wordItem.dataset.skipToggleOnce = '1';
+                    openDictionaryDefinition(word);
+                }, LONG_PRESS_DURATION_MS);
+            };
+
+            const endLongPress = () => {
+                isPressing = false;
+                clearLongPressTimer();
+            };
+
+            wordTextEl.addEventListener('mousedown', startLongPress);
+            wordTextEl.addEventListener('touchstart', startLongPress, { passive: true });
+            wordTextEl.addEventListener('mouseup', endLongPress);
+            wordTextEl.addEventListener('mouseleave', endLongPress);
+            wordTextEl.addEventListener('touchend', endLongPress, { passive: true });
+            wordTextEl.addEventListener('touchcancel', endLongPress, { passive: true });
+            wordTextEl.addEventListener('contextmenu', (e) => {
+                if (isPressing || (Date.now() - lastLongPressAt) < CONTEXT_MENU_SUPPRESS_DURATION_MS) {
+                    e.preventDefault();
+                }
+            });
         }
 
         // Update stats display
@@ -1408,6 +1463,8 @@
                     const wordText = document.createElement('span');
                     wordText.className = 'word-text';
                     wordText.textContent = word;
+                    wordText.title = 'Press and hold to open dictionary definition in a new tab';
+                    attachWordLongPressHandler(wordText, word, wordItem);
                     wordItem.appendChild(wordText);
 
                     // Button to highlight the word on the grid
