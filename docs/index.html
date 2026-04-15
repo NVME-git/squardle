@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SquareBob SpongePants - Squardle Solver</title>
+    <title>Squarelock - Squardle Solver</title>
     <link rel="icon" type="image/x-icon" href="favicons/favicon.ico">
     <link rel="icon" type="image/png" sizes="16x16" href="favicons/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="favicons/favicon-32x32.png">
@@ -45,16 +45,6 @@
         .header p {
             font-size: 1.1em;
             opacity: 0.9;
-        }
-
-        .bmc-link {
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        .bmc-link img {
-            height: 40px;
-            border-radius: 8px;
         }
 
         .card {
@@ -278,23 +268,75 @@
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
 
+        .bottom-footer {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .bottom-footer .bmc-link {
+            display: inline-block;
+            margin-top: 14px;
+        }
+
+        .bottom-footer .bmc-link img {
+            height: 40px;
+            border-radius: 8px;
+        }
+
         .install-banner {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(255,255,255,0.4);
+            background: white;
             border-radius: 12px;
-            padding: 14px 18px;
-            margin-top: 18px;
             font-size: 0.9em;
-            color: white;
+            color: #333;
             line-height: 1.5;
-            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .install-banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            color: #8B4513;
+            transition: background 0.2s;
+        }
+
+        .install-banner-header:hover {
+            background: #fff8f0;
+        }
+
+        .install-banner-header .toggle-icon {
+            font-size: 0.85em;
+            margin-left: 8px;
+            transition: transform 0.3s;
+        }
+
+        .install-banner.expanded .install-banner-header .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .install-banner-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease-out, padding 0.35s;
+            padding: 0 16px;
+        }
+
+        .install-banner.expanded .install-banner-body {
+            max-height: 300px;
+            padding: 0 16px 14px;
         }
 
         .install-banner strong {
             display: block;
             margin-bottom: 8px;
             font-size: 1em;
+            color: #8B4513;
         }
 
         .install-banner .install-steps {
@@ -311,12 +353,13 @@
         .install-banner .platform-label {
             font-weight: 700;
             margin-bottom: 4px;
-            opacity: 0.9;
+            color: #555;
         }
 
         .install-banner ol {
             margin: 0;
             padding-left: 18px;
+            color: #444;
         }
 
         .install-banner li {
@@ -324,26 +367,23 @@
         }
 
         .install-banner .dismiss-btn {
-            position: absolute;
-            top: 8px;
-            right: 10px;
             background: none;
             border: none;
-            color: white;
-            font-size: 1.2em;
+            color: #999;
+            font-size: 1.1em;
             cursor: pointer;
             padding: 2px 6px;
             margin: 0;
-            opacity: 0.7;
             line-height: 1;
             border-radius: 4px;
+            flex-shrink: 0;
         }
 
         .install-banner .dismiss-btn:hover {
-            opacity: 1;
+            color: #555;
             transform: none;
             box-shadow: none;
-            background: rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.06);
         }
 
         .share-notification {
@@ -606,34 +646,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🧽 SquareBob SpongePants</h1>
+            <h1>🔍 Squarelock</h1>
             <p>Find all words in your Squardle grid</p>
-            <a class="bmc-link" href="https://buymeacoffee.com/nabeelvandayar" target="_blank" rel="noopener noreferrer">
-                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee">
-            </a>
-
-            <div class="install-banner" id="installBanner">
-                <button class="dismiss-btn" onclick="dismissInstallBanner()" aria-label="Dismiss">✕</button>
-                <strong>📱 Add to your home screen for quick access!</strong>
-                <div class="install-steps">
-                    <div class="platform">
-                        <div class="platform-label">iPhone / iPad (Safari)</div>
-                        <ol>
-                            <li>Tap the <strong>Share</strong> button (□↑)</li>
-                            <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
-                            <li>Tap <strong>Add</strong></li>
-                        </ol>
-                    </div>
-                    <div class="platform">
-                        <div class="platform-label">Android (Chrome)</div>
-                        <ol>
-                            <li>Tap the <strong>⋮ menu</strong> (top right)</li>
-                            <li>Tap <strong>Add to Home screen</strong></li>
-                            <li>Tap <strong>Add</strong></li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="card input-section">
@@ -703,6 +717,42 @@
             <div class="stats" id="stats"></div>
             <div id="wordGroups"></div>
         </div>
+
+        <div class="bottom-footer">
+            <div class="install-banner" id="installBanner">
+                <div class="install-banner-header" onclick="toggleInstallBanner()" tabindex="0" role="button" aria-expanded="false" id="installBannerToggle" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleInstallBanner();}">
+                    <span>📱 Save to Home Screen</span>
+                    <span>
+                        <span class="toggle-icon">▼</span>
+                        <button class="dismiss-btn" onclick="event.stopPropagation(); dismissInstallBanner()" aria-label="Dismiss">✕</button>
+                    </span>
+                </div>
+                <div class="install-banner-body">
+                    <strong>Add to your home screen for quick access!</strong>
+                    <div class="install-steps">
+                        <div class="platform">
+                            <div class="platform-label">iPhone / iPad (Safari)</div>
+                            <ol>
+                                <li>Tap the <strong>Share</strong> button (□↑)</li>
+                                <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+                                <li>Tap <strong>Add</strong></li>
+                            </ol>
+                        </div>
+                        <div class="platform">
+                            <div class="platform-label">Android (Chrome)</div>
+                            <ol>
+                                <li>Tap the <strong>⋮ menu</strong> (top right)</li>
+                                <li>Tap <strong>Add to Home screen</strong></li>
+                                <li>Tap <strong>Add</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a class="bmc-link" href="https://buymeacoffee.com/nabeelvandayar" target="_blank" rel="noopener noreferrer">
+                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee">
+            </a>
+        </div>
     </div>
 
     <div id="shareNotification" class="share-notification">
@@ -717,6 +767,15 @@
                 if (banner) banner.style.display = 'none';
             }
         })();
+
+        function toggleInstallBanner() {
+            var banner = document.getElementById('installBanner');
+            var toggle = document.getElementById('installBannerToggle');
+            if (banner) {
+                var expanded = banner.classList.toggle('expanded');
+                if (toggle) toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            }
+        }
 
         function dismissInstallBanner() {
             localStorage.setItem('installBannerDismissed', '1');

@@ -1,6 +1,6 @@
 {
-  "name": "SquareBob SpongePants",
-  "short_name": "Squardle Solver",
+  "name": "Squarelock",
+  "short_name": "Squarelock",
   "start_url": "/squardle/",
   "scope": "/squardle/",
   "display": "standalone",
