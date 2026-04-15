@@ -882,6 +882,8 @@
 
         function attachWordLongPressHandler(wordTextEl, word, wordItem) {
             let longPressTimer = null;
+            let isPressing = false;
+            let lastLongPressAt = 0;
 
             const clearLongPressTimer = () => {
                 if (longPressTimer) {
@@ -895,14 +897,17 @@
                 if (event.type === 'touchstart' && event.touches && event.touches.length !== 1) return;
 
                 clearLongPressTimer();
+                isPressing = true;
 
                 longPressTimer = setTimeout(() => {
+                    lastLongPressAt = Date.now();
                     wordItem.dataset.skipToggleOnce = '1';
                     openDictionaryDefinition(word);
                 }, LONG_PRESS_DURATION_MS);
             };
 
             const endLongPress = () => {
+                isPressing = false;
                 clearLongPressTimer();
             };
 
@@ -910,10 +915,12 @@
             wordTextEl.addEventListener('touchstart', startLongPress, { passive: true });
             wordTextEl.addEventListener('mouseup', endLongPress);
             wordTextEl.addEventListener('mouseleave', endLongPress);
-            wordTextEl.addEventListener('touchend', endLongPress);
-            wordTextEl.addEventListener('touchcancel', endLongPress);
+            wordTextEl.addEventListener('touchend', endLongPress, { passive: true });
+            wordTextEl.addEventListener('touchcancel', endLongPress, { passive: true });
             wordTextEl.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
+                if (isPressing || (Date.now() - lastLongPressAt) < 1000) {
+                    e.preventDefault();
+                }
             });
         }
 
