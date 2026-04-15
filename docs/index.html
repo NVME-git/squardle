@@ -712,7 +712,7 @@
                 <button class="reset-btn" onclick="resetProgress()">🔄 Reset Progress</button>
             </div>
             <div class="word-hint">
-                💡 <strong>Tip:</strong> Click any word to check it off, press 👁 to highlight it on the grid, or long-press the word text to open a dictionary definition.
+                💡 <strong>Tip:</strong> Click any word to check it off, press 👁 to highlight it on the grid, or press and hold the word text to open a dictionary definition.
             </div>
             <div class="stats" id="stats"></div>
             <div id="wordGroups"></div>
@@ -840,6 +840,7 @@
         let highlightTimeouts = [];
         let fadeTimeout = null;
         const LONG_PRESS_DURATION_MS = 550;
+        const CONTEXT_MENU_SUPPRESS_DURATION_MS = 1000;
         const DICTIONARY_URL_BASE = 'https://en.wiktionary.org/wiki/';
 
         // Load checked words from localStorage
@@ -918,7 +919,7 @@
             wordTextEl.addEventListener('touchend', endLongPress, { passive: true });
             wordTextEl.addEventListener('touchcancel', endLongPress, { passive: true });
             wordTextEl.addEventListener('contextmenu', (e) => {
-                if (isPressing || (Date.now() - lastLongPressAt) < 1000) {
+                if (isPressing || (Date.now() - lastLongPressAt) < CONTEXT_MENU_SUPPRESS_DURATION_MS) {
                     e.preventDefault();
                 }
             });
