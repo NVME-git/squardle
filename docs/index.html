@@ -278,6 +278,74 @@
             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
         }
 
+        .install-banner {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-top: 18px;
+            font-size: 0.9em;
+            color: white;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .install-banner strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .install-banner .install-steps {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .install-banner .platform {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .install-banner .platform-label {
+            font-weight: 700;
+            margin-bottom: 4px;
+            opacity: 0.9;
+        }
+
+        .install-banner ol {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .install-banner li {
+            margin-bottom: 2px;
+        }
+
+        .install-banner .dismiss-btn {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 2px 6px;
+            margin: 0;
+            opacity: 0.7;
+            line-height: 1;
+            border-radius: 4px;
+        }
+
+        .install-banner .dismiss-btn:hover {
+            opacity: 1;
+            transform: none;
+            box-shadow: none;
+            background: rgba(255,255,255,0.2);
+        }
+
         .share-notification {
             position: fixed;
             top: 20px;
@@ -543,6 +611,29 @@
             <a class="bmc-link" href="https://buymeacoffee.com/nabeelvandayar" target="_blank" rel="noopener noreferrer">
                 <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee">
             </a>
+
+            <div class="install-banner" id="installBanner">
+                <button class="dismiss-btn" onclick="dismissInstallBanner()" aria-label="Dismiss">✕</button>
+                <strong>📱 Add to your home screen for quick access!</strong>
+                <div class="install-steps">
+                    <div class="platform">
+                        <div class="platform-label">iPhone / iPad (Safari)</div>
+                        <ol>
+                            <li>Tap the <strong>Share</strong> button (□↑)</li>
+                            <li>Scroll down and tap <strong>Add to Home Screen</strong></li>
+                            <li>Tap <strong>Add</strong></li>
+                        </ol>
+                    </div>
+                    <div class="platform">
+                        <div class="platform-label">Android (Chrome)</div>
+                        <ol>
+                            <li>Tap the <strong>⋮ menu</strong> (top right)</li>
+                            <li>Tap <strong>Add to Home screen</strong></li>
+                            <li>Tap <strong>Add</strong></li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="card input-section">
@@ -619,6 +710,20 @@
     </div>
 
     <script>
+        // Install banner
+        (function() {
+            if (localStorage.getItem('installBannerDismissed') === '1') {
+                var banner = document.getElementById('installBanner');
+                if (banner) banner.style.display = 'none';
+            }
+        })();
+
+        function dismissInstallBanner() {
+            localStorage.setItem('installBannerDismissed', '1');
+            var banner = document.getElementById('installBanner');
+            if (banner) banner.style.display = 'none';
+        }
+
         // Trie Implementation
         class TrieNode {
             constructor() {
