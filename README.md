@@ -4,6 +4,8 @@ A complete Squaredle puzzle solver available in two versions:
 1. **Web App** (SPA for GitHub Pages) - Use in your browser
 2. **CLI Tool** (Python) - Run from command line with image generation
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?logo=buy-me-a-coffee)](https://buymeacoffee.com/nabeelvandayar)
+
 ---
 
 ## 🌐 Web App (Recommended for Most Users)
